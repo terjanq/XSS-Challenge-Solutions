@@ -104,6 +104,9 @@ using SOME once again.
 `;
 
 window.addEventListener(`DOMContentLoaded`, _ => {
+    hljs.configure({
+        'tabReplace': '<br>123'
+    })
     let c = solution.outerHTML.replace(/\r\n/g, '\n')
     const shift = spaces => {
         if (spaces < 0) {
@@ -126,5 +129,10 @@ window.addEventListener(`DOMContentLoaded`, _ => {
     document.querySelectorAll('pre code').forEach((block) => {
         hljs.highlightBlock(block);
     });
+
+    code.innerHTML = code.innerHTML.replace(
+        `"iframeA"</span>`, `"iframeA"</span><br>           `
+        )
+    
 
 });
