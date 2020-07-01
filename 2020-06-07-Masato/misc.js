@@ -69,6 +69,40 @@ code_index_html = `\
             }
         <\/script>`;
 
+code_writeup = `\
+The challenge consisted of leveraging an advanced case of the SOME attack to achieve cross-site scripting.
+
+The challenger was presented with:
+
+1. Partial control of the callback parameter on /check-code.php endpoint (/[^a-z0-9.]+/i).
+2. Partial control of the code parameter on /check-code.php endpoint (length <= 10).
+
+SOME was achieved by specifying a prepared payload in the code parameter, which was being used to
+load aJSONP endpoint with a fixed callback and a partially attacker-controlled function parameter
+(retrieved from the code value).
+
+Furthermore, to achieve control of the callback parameter used in the JSONP one was required to abuse
+the unsafe use of encodeURI in the checkCode function.
+
+Since encodeURI doesn't encode the "&" character it was possible to send "&callback=" in the code parameter
+as a way to "overwrite" its value (given the server was using the last occurrence of a given parameter
+instead of the first one).
+
+As a side effect of the encoding functionality, it was not possible to use certain characters like "+" or "&"
+in the payload since "%" would end up URL encoded - preventing trivial string concatenation.
+
+The next step was to figure out how to escalate SOME to XSS.
+Functions that evaluate javascript from strings were discarded given there was only partial control over
+the function parameter and its start wasn't valid javascript.
+
+This lead to the realization that by using document.write it was possible to write to the document stream
+and build the payload little by little.
+
+With the help of multiple iframes and same-origin cross-iframe manipulation, one could write an HTML tag
+to the DOM containing an oncut event and then trigger the desired payload by emitting a cut event
+using SOME once again.
+`;
+
 window.addEventListener(`DOMContentLoaded`, _ => {
     let c = solution.outerHTML.replace(/\r\n/g, '\n')
     const shift = spaces => {
@@ -85,7 +119,8 @@ window.addEventListener(`DOMContentLoaded`, _ => {
 
     codePHP.innerText = code_check_code;
     codeHTML.innerText = code_index_html;
-
+    codeWrite.innerText = code_writeup;
+        
     code.innerText = c;
 
     document.querySelectorAll('pre code').forEach((block) => {
