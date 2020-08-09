@@ -85,5 +85,9 @@ button{
     padding: 1px 8px;
     color: white;
     font-weight: bold;
-    cursor: pointer;
+    cursor: pointer
+}
+
+button:focus {
+    outline:0;
 }

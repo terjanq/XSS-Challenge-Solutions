@@ -104,9 +104,6 @@ using SOME once again.
 `;
 
 window.addEventListener(`DOMContentLoaded`, _ => {
-    hljs.configure({
-        'tabReplace': '<br>123'
-    })
     let c = solution.outerHTML.replace(/\r\n/g, '\n')
     const shift = spaces => {
         if (spaces < 0) {
