@@ -1,5 +1,5 @@
 # XSS Challenges Solutions
-*[https://solutions.terjanq.me/](solutions.terjanq.me)*  
+[solutions.terjanq.me](https://solutions.terjanq.me/)   
 
 
 This repository is an interactive collection of my solutions to various XSS challenges.
