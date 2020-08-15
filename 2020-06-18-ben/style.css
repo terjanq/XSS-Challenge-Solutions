@@ -1,0 +1,93 @@
+iframe {
+    display: none
+}
+
+html,
+.main {
+    margin: 0px;
+    padding: 0px;
+}
+
+html {
+    background: #596984 url(bg.jpg) no-repeat center center fixed;
+    background-size: cover;
+}
+
+h2.subtitle {
+    margin-top: -20px;
+    font-weight: 400;
+    color: #797f8a;
+    font-size: 20px;
+}
+
+h2.subtitle a {
+    color: #bbbbbb !important;
+}
+
+.window {
+    background: #011627;
+    box-shadow: rgba(0, 0, 0, 0.55) 0px 20px 68px;
+    border-radius: 5px;
+    min-width: 800px;
+    max-width: 1000px;
+    font-size: 16px;
+    margin: 50px auto 50px auto;
+    padding: 15px 20px 20px 20px;
+    opacity: 0.95;
+}
+
+.window code {
+    margin-top: 40px;
+}
+
+#intro {
+    margin: auto;
+    color: #d6deeb;
+    font-size: 16px;
+}
+
+#intro a {
+    text-decoration: none;
+    color: #7fdbca;
+}
+
+.window .title {
+    color: #637777;
+    /* margin-left:20px; */
+    font-weight: bold;
+    font-size: 16px;
+
+}
+
+.window .title::before {
+    content: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='54' height='14' viewBox='0 0 54 14'%3E%3Cg fill='none' fill-rule='evenodd' transform='translate(1 1)'%3E%3Ccircle cx='6' cy='6' r='6' fill='%23FF5F56' stroke='%23E0443E' stroke-width='.5'%3E%3C/circle%3E%3Ccircle cx='26' cy='6' r='6' fill='%23FFBD2E' stroke='%23DEA123' stroke-width='.5'%3E%3C/circle%3E%3Ccircle cx='46' cy='6' r='6' fill='%2327C93F' stroke='%231AAB29' stroke-width='.5'%3E%3C/circle%3E%3C/g%3E%3C/svg%3E");
+    /* width: 300px; */
+    margin-right: 20px;
+}
+
+details {
+    cursor: pointer;
+    margin-bottom: 20px;
+}
+
+summary:active,
+summary:focus {
+    border: none;
+    outline: none;
+    cursor: pointer;
+    user-select: none;
+}
+
+button{
+    background: #f45b54;
+    border: 1px solid white;
+    border-radius: 5px;
+    padding: 1px 8px;
+    color: white;
+    font-weight: bold;
+    cursor: pointer
+}
+
+button:focus {
+    outline:0;
+}
