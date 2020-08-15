@@ -1,4 +1,4 @@
-# XSS-Challenge-Solutions
+# XSS Challenges Solutions
 *[https://solutions.terjanq.me/](solutions.terjanq.me)*  
 
 
