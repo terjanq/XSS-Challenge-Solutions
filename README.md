@@ -2,7 +2,7 @@
 *[https://solutions.terjanq.me/](solutions.terjanq.me)*  
 
 
-These are my solutions to various XSS challenges I have solved in form of a mini interactive platform
+This repository is an interactive collection of my solutions to various XSS challenges.
 
 ## List of available solutions:
 * [2020-06-07-Masato](https://solutions.terjanq.me/2020-06-07-Masato/index.html)
